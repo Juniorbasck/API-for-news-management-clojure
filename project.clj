@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [clj-http "3.12.3"]
                  [org.clojure/data.json "2.4.0"]
+                 [cheshire "5.10.2"]
                  [http-kit "2.7.0"]]
   :main ^:skip-aot my-clojure-api.core
   :target-path "target/%s"
