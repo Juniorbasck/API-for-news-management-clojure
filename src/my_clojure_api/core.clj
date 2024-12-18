@@ -1,11 +1,8 @@
 (ns my-clojure-api.core
   (:gen-class)
   (:require [org.httpkit.server :refer [run-server]]
-            [cheshire.core :as json] 
-            [my-clojure-api.controllers :as controllers]
-            [environ.core :refer [env]]))
-
-
+            [cheshire.core :as json]
+            [my-clojure-api.controllers :as controllers]))
 
 (defn login-handler
   "Endpoint para autenticação do usuário"
@@ -24,6 +21,17 @@
     (catch Exception e
       {:status 500 :body (str "Erro ao processar a solicitação: " (.getMessage e))})))
 
+(defn get-all-user-handler
+  "Endpoint lista todos usuarios"
+  [request]
+  (try
+    ;; Supondo que você não precisa do corpo aqui
+    (let [response (controllers/buscar-todos-usuarios)]
+      ;; Garante que o retorno esteja no formato esperado
+      {:status (:status response)
+       :body (json/generate-string response)}) ;; Serializa o JSON antes de enviar
+    (catch Exception e
+      {:status 500 :body (str "Erro ao processar a solicitação: " (.getMessage e))})))
 
 (defn -main
   "Inicializa o servidor"
@@ -32,13 +40,22 @@
    (fn [request]
      (let [uri (:uri request)]
        (println "Recebendo requisição para URI:" uri) ;; Log para depuração
-       (case uri
-         "/login" (try
-                    (login-handler request)
-                    (catch Exception e
-                      {:status 500
-                       :body (str "Erro interno no servidor: " (.getMessage e))}))
-         ;; Endpoint não encontrado
+       (cond
+         (= uri "/login")
+         (try
+           (login-handler request)
+           (catch Exception e
+             {:status 500
+              :body (str "Erro interno no servidor: " (.getMessage e))}))
+
+         (= uri "/getAllUser")
+         (try
+           (get-all-user-handler request)
+           (catch Exception e
+             {:status 500
+              :body (str "Erro interno no servidor: " (.getMessage e))}))
+
+         :else
          {:status 404 :body "Endpoint não encontrado"})))
    {:port 3000})
   (println "Servidor iniciado na porta 3000!!"))
