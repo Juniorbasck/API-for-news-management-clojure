@@ -1,44 +1,163 @@
-# my-clojure-api
+# Documentação da API
 
-FIXME: description
+## Instale as Dependências
+```bash
+lein deps
+```
 
-## Installation
+## Execute o Servidor
+```bash
+lein run
+```
 
-Download from http://example.com/FIXME.
+---
 
-## Usage
+## 📚 Endpoints
 
-FIXME: explanation
+### 1. Autenticação de Usuário
+- **Rota**: `/login`
+- **Método**: `POST`
+- **Descrição**: Autentica um usuário com base no e-mail e senha.
 
-    $ java -jar my-clojure-api-0.1.0-standalone.jar [args]
+**Exemplo de Requisição:**
+```json
+{
+  "email": "admin@example.com",
+  "senha": "123"
+}
+```
 
-## Options
+**Exemplo de Resposta:**
+```json
+{
+  "status": 200,
+  "message": "Usuário autenticado com sucesso",
+  "data": {
+    "id": 1,
+    "nome": "Administrador",
+    "email": "admin@example.com",
+    "isadmin": true
+  }
+}
+```
 
-FIXME: listing of options this app accepts.
+---
 
-## Examples
+### 2. Salvar Notícias
+- **Rota**: `/news/save`
+- **Método**: `POST`
+- **Descrição**: Busca notícias de uma API externa e salva no banco de dados.
 
-...
+**Exemplo de Resposta:**
+```json
+{
+  "status": 200,
+  "message": "Notícias salvas com sucesso!"
+}
+```
 
-### Bugs
+---
 
-...
+### 3. Listar Usuários
+- **Rota**: `/getAllUser`
+- **Método**: `GET`
+- **Descrição**: Retorna todos os usuários cadastrados no banco de dados.
 
-### Any Other Sections
-### That You Think
-### Might be Useful
+**Exemplo de Resposta:**
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "nome": "Administrador",
+      "email": "admin@example.com",
+      "isadmin": true
+    },
+    {
+      "id": 2,
+      "nome": "Usuário Normal",
+      "email": "user@example.com",
+      "isadmin": false
+    }
+  ]
+}
+```
 
-## License
+---
 
-Copyright © 2024 FIXME
+## 🗊 Estrutura do Banco de Dados
 
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
+### Tabela `usuarios`
+| Campo    | Tipo     | Descrição                 |
+|----------|----------|-----------------------------|
+| `id`     | SERIAL   | Identificador único        |
+| `nome`   | TEXT     | Nome do usuário            |
+| `email`  | TEXT     | E-mail único do usuário   |
+| `senha`  | TEXT     | Senha do usuário           |
+| `isadmin`| BOOLEAN  | Se o usuário é admin       |
 
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+### Tabela `noticias`
+| Campo            | Tipo       | Descrição                      |
+|------------------|------------|----------------------------------|
+| `id`             | SERIAL     | Identificador único           |
+| `title`          | TEXT       | Título da notícia             |
+| `abstract`       | TEXT       | Resumo da notícia             |
+| `url`            | TEXT       | URL única da notícia         |
+| `published_date` | TIMESTAMP  | Data de publicação           |
+| `source`         | TEXT       | Fonte da notícia              |
+| `likes`          | INTEGER    | Número de curtidas            |
+| `created_at`     | TIMESTAMP  | Data de criação do registro   |
+
+---
+
+## 🛠️ Desenvolvimento
+
+### Principais Arquivos
+- **`core.clj`**: Arquivo principal que define as rotas e inicializa o servidor.
+- **`controllers.clj`**: Contém a lógica de negócios, como salvar notícias e autenticar usuários.
+- **`infraConfigs.clj`**: Configurações de acesso às APIs externas e banco de dados.
+
+### Testar Localmente
+Use ferramentas como Postman ou cURL para testar os endpoints:
+
+```bash
+curl -X POST http://localhost:3000/login \
+-H "Content-Type: application/json" \
+-d '{"email": "admin@example.com", "senha": "123"}'
+```
+
+---
+
+## 🤝 Contribuição
+1. Faça um fork do repositório.
+2. Crie uma branch para suas alterações:
+   ```bash
+   git checkout -b minha-feature
+   ```
+3. Envie suas alterações:
+   ```bash
+   git commit -m "Minha nova feature"
+   git push origin minha-feature
+   ```
+4. Abra um Pull Request.
+
+---
+
+## 🖋️ Licença
+Este projeto está sob a licença MIT. Consulte o arquivo LICENSE para mais detalhes.
+
+---
+
+### Como Usar o README
+1. Copie o texto acima e cole no arquivo `README.md` na raiz do seu projeto.
+2. Substitua os valores de placeholders, como `<sua-chave-da-api-de-noticias>`, com as informações reais do seu projeto.
+3. Confirme e faça o commit:
+   ```bash
+   git add README.md
+   git commit -m "Adiciona README ao projeto"
+   git push origin main
+   ```
+
+Se precisar de mais alguma coisa, estou à disposição! 🚀
+
