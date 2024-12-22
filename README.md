@@ -149,15 +149,4 @@ Este projeto está sob a licença MIT. Consulte o arquivo LICENSE para mais deta
 
 ---
 
-### Como Usar o README
-1. Copie o texto acima e cole no arquivo `README.md` na raiz do seu projeto.
-2. Substitua os valores de placeholders, como `<sua-chave-da-api-de-noticias>`, com as informações reais do seu projeto.
-3. Confirme e faça o commit:
-   ```bash
-   git add README.md
-   git commit -m "Adiciona README ao projeto"
-   git push origin main
-   ```
-
-Se precisar de mais alguma coisa, estou à disposição! 🚀
 
