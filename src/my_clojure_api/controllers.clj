@@ -1,6 +1,6 @@
 (ns my-clojure-api.controllers
   (:require [clj-http.client :as client]
-            [my-clojure-api.infraConfigs :refer [get-supabase-token get-api-key]]))
+            [my-clojure-api.infraConfigs :refer [get-supabase-token get-api-key get-news-api-token]]))
 
 (defn buscar-usuario-por-email-e-senha
   "Busca um usuário no Supabase pelo email e senha"
@@ -46,3 +46,41 @@
       (catch Exception e
         (println "Erro ao buscar todos os usuários:" (.getMessage e))
         {:status 500 :message "Erro ao buscar todos os usuários" :error (.getMessage e)}))))
+
+(defn salvar-noticias
+  "Faz a requisição à API externa e salva as notícias no banco Supabase."
+  []
+  (println "entro no metodo salve notiacs")
+  (println "Token da API de notícias:" (get-news-api-token))
+  (try
+    ;; Requisição para a API de notícias (exemplo: New York Times)
+    (let [api-url "https://api.nytimes.com/svc/news/v3/content/all/all.json"
+          api-key (get-news-api-token) 
+          response (client/get api-url {:query-params {"api-key" api-key}
+                                        :as :json})
+          noticias (:results (:body response))]
+      (println "bateu na outr api")
+      (println "result" response)
+      ;; Salva cada notícia no banco de dados
+      (doseq [noticia noticias]
+        (let [url "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/noticias"
+              headers {"Authorization" (str "Bearer " (get-supabase-token))
+                       "apikey" (get-supabase-token)
+                       "Content-Type" "application/json"}
+              body {:title (:title noticia)
+                    :abstract (:abstract noticia)
+                    :url (:url noticia)
+                    :published_date (:published_date noticia)
+                    :source (:source noticia)
+                    :likes 0}]
+          (try
+            ;; Faz o POST no banco de dados
+            (client/post url {:headers headers :form-params body :as :json})
+            (catch Exception e
+              (println "Erro ao salvar notícia no banco:" (.getMessage e))))))
+      ;; Retorno de sucesso
+      {:status 200 :message "Notícias salvas com sucesso!"})
+    (catch Exception e
+      ;; Tratamento de erro
+      (println "Erro ao buscar ou salvar notícias:" (.getMessage e))
+      {:status 500 :message "Erro ao salvar notícias" :error (.getMessage e)})))

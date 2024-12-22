@@ -33,6 +33,17 @@
     (catch Exception e
       {:status 500 :body (str "Erro ao processar a solicitação: " (.getMessage e))})))
 
+(defn save-news
+  "Endpoint para salvar notícias"
+  [request]
+  (try
+    (let [response (controllers/salvar-noticias)]
+      ;; Retorna o status da operação
+      {:status (:status response)
+       :body (json/generate-string response)}) ;; Serializa a resposta para JSON
+    (catch Exception e
+      {:status 500 :body (str "Erro ao processar a solicitação: " (.getMessage e))})))
+
 (defn -main
   "Inicializa o servidor"
   [& args]
@@ -47,6 +58,13 @@
            (catch Exception e
              {:status 500
               :body (str "Erro interno no servidor: " (.getMessage e))}))
+        
+         (= uri "/news/save")
+         (try
+           (save-news request)
+           (catch Exception e
+             {:status 500
+              :body (str "Erro interno no servidor: " (.getMessage e))}))
 
          (= uri "/getAllUser")
          (try
@@ -58,4 +76,4 @@
          :else
          {:status 404 :body "Endpoint não encontrado"})))
    {:port 3000})
-  (println "Servidor iniciado na porta 3000!!"))
+  (println "Servidor iniciado na porta 3000!"))
