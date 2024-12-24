@@ -35,14 +35,13 @@
                  "Content-Type" "application/json"}]
     (try
       (println "Entrando no try do request para buscar todos os usuários")
-      ;; Requisição GET para buscar todos os usuários
       (let [response (client/get url {:headers headers :as :json})]
         (println "Resposta do Supabase:" response)
         (if (or (nil? (:body response)) (empty? (:body response)))
           {:status 404 :message "Nenhum usuário encontrado"}
           {:status 200
            :message "Usuários encontrados com sucesso"
-           :data (:body response)})) ;; Retorna todos os usuários encontrados
+           :data (:body response)})) 
       (catch Exception e
         (println "Erro ao buscar todos os usuários:" (.getMessage e))
         {:status 500 :message "Erro ao buscar todos os usuários" :error (.getMessage e)}))))
@@ -53,7 +52,6 @@
   (println "entro no metodo salve notiacs")
   (println "Token da API de notícias:" (get-news-api-token))
   (try
-    ;; Requisição para a API de notícias (exemplo: New York Times)
     (let [api-url "https://api.nytimes.com/svc/news/v3/content/all/all.json"
           api-key (get-news-api-token) 
           response (client/get api-url {:query-params {"api-key" api-key}
@@ -61,7 +59,6 @@
           noticias (:results (:body response))]
       (println "bateu na outr api")
       (println "result" response)
-      ;; Salva cada notícia no banco de dados
       (doseq [noticia noticias]
         (let [url "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/noticias"
               headers {"Authorization" (str "Bearer " (get-supabase-token))
@@ -105,3 +102,24 @@
     (catch Exception e
       (println "Erro ao curtir notícia:" (.getMessage e))
       {:status 500 :message "Erro ao curtir notícia" :error (.getMessage e)})))
+
+(defn deletar-noticia
+  "Exclui uma notícia do banco se o usuário for administrador."
+  [user-id news-id]
+  (try
+    (let [user-url (str "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/usuarios?id=eq." user-id)
+          headers {"Authorization" (str "Bearer " (get-supabase-token))
+                   "apikey" (get-supabase-token)
+                   "Content-Type" "application/json"}
+          user-response (client/get user-url {:headers headers :as :json})
+          user-data (first (:body user-response))]
+      (if (and user-data (:isadmin user-data))
+        (let [news-url (str "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/noticias?id=eq." news-id)
+              delete-response (client/delete news-url {:headers headers})]
+          (if (= 204 (:status delete-response)) ;; Verifica sucesso na exclusão
+            {:status 200 :message "Notícia excluída com sucesso."}
+            {:status 404 :message "Notícia não encontrada."}))
+        {:status 403 :message "Você não tem permissão para excluir esta notícia."}))
+    (catch Exception e
+      (println "Erro ao excluir notícia:" (.getMessage e))
+      {:status 500 :message "Erro ao excluir notícia" :error (.getMessage e)})))
