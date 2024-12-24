@@ -1,5 +1,6 @@
 (ns my-clojure-api.controllers
   (:require [clj-http.client :as client]
+            [cheshire.core :as json] 
             [my-clojure-api.infraConfigs :refer [get-supabase-token get-api-key get-news-api-token]]))
 
 (defn buscar-usuario-por-email-e-senha
@@ -10,8 +11,8 @@
                  "?email=eq." email
                  "&senha=eq." senha)
         headers {"Authorization" (str "Bearer " (get-supabase-token))
-                                 "apikey" (get-api-key)
-                  "Content-Type" "application/json"}]
+                 "apikey" (get-api-key)
+                 "Content-Type" "application/json"}]
     (try
       (println "Entrando no try do request")
       (let [response (client/get url {:headers headers :as :json})]
@@ -24,7 +25,6 @@
       (catch Exception e
         (println "Erro ao buscar usuário:" (.getMessage e))
         {:status 500 :message "Erro ao buscar usuário" :error (.getMessage e)}))))
-
 
 (defn buscar-todos-usuarios
   "Busca todos os usuários no Supabase"
@@ -41,7 +41,7 @@
           {:status 404 :message "Nenhum usuário encontrado"}
           {:status 200
            :message "Usuários encontrados com sucesso"
-           :data (:body response)})) 
+           :data (:body response)}))
       (catch Exception e
         (println "Erro ao buscar todos os usuários:" (.getMessage e))
         {:status 500 :message "Erro ao buscar todos os usuários" :error (.getMessage e)}))))
@@ -53,7 +53,7 @@
   (println "Token da API de notícias:" (get-news-api-token))
   (try
     (let [api-url "https://api.nytimes.com/svc/news/v3/content/all/all.json"
-          api-key (get-news-api-token) 
+          api-key (get-news-api-token)
           response (client/get api-url {:query-params {"api-key" api-key}
                                         :as :json})
           noticias (:results (:body response))]
@@ -123,3 +123,37 @@
     (catch Exception e
       (println "Erro ao excluir notícia:" (.getMessage e))
       {:status 500 :message "Erro ao excluir notícia" :error (.getMessage e)})))
+
+(defn editar-noticia
+  "Edita os detalhes de uma notícia no banco de dados, somente se o usuário for admin."
+  [user-id news-id update-data]
+  (try
+    ;; Verificar se o usuário é admin
+    (let [user-url (str "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/usuarios?id=eq." user-id)
+          headers {"Authorization" (str "Bearer " (get-supabase-token))
+                   "apikey" (get-supabase-token)
+                   "Content-Type" "application/json"}
+          user-response (client/get user-url {:headers headers :as :json})
+          user-data (first (:body user-response))]
+      (if (and user-data (:isadmin user-data))
+        ;; Se o usuário for admin, verificar se a notícia existe
+        (let [news-url (str "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/noticias?id=eq." news-id)
+              news-response (client/get news-url {:headers headers :as :json})
+              news-data (first (:body news-response))]
+          (if news-data
+            ;; Atualizar a notícia
+            (let [valid-fields (select-keys update-data [:title :abstract :url :published_date]) ;; Filtrar campos válidos
+                  patch-response (client/patch news-url {:headers headers
+                                                         :body (json/generate-string valid-fields)
+                                                         :as :json})]
+              (println "Resposta do Supabase PATCH:" patch-response)
+              (if (= 204 (:status patch-response))
+                {:status 200 :message "Notícia atualizada com sucesso!"}
+                {:status 400 :message "Erro ao atualizar a notícia."}))
+            {:status 404 :message "Notícia não encontrada."}))
+        {:status 403 :message "Você não tem permissão para editar esta notícia."}))
+    (catch Exception e
+      (println "Erro ao editar notícia:" (.getMessage e))
+      {:status 500 :message "Erro ao editar notícia" :error (.getMessage e)})))
+
+

@@ -45,7 +45,6 @@
     (catch Exception e
       {:status 500 :body (str "Erro ao processar a solicitação: " (.getMessage e))})))
 
-
 (defn parse-query-params [query-string]
   "Transforma a query string em um mapa"
   (when query-string
@@ -67,13 +66,12 @@
     (catch Exception e
       {:status 500 :body (str "Erro ao processar a solicitação: " (.getMessage e))})))
 
-
 (defn -main
   "Inicializa o servidor"
   [& args]
   (run-server
    (fn [request]
-     (let [uri (:uri request) 
+     (let [uri (:uri request)
            method (:request-method request)]
        (println "Recebendo requisição para URI:" uri) ;; Log para depuração
        (cond
@@ -83,29 +81,45 @@
            (catch Exception e
              {:status 500
               :body (str "Erro interno no servidor: " (.getMessage e))}))
-        
-        (= [method uri] [:post "/news/like"])
-        (try
-          (like-news-handler request)
-          (catch Exception e
-            {:status 500
-             :body (str "Erro interno no servidor: " (.getMessage e))}))
+
+         (= [method uri] [:post "/news/like"])
+         (try
+           (like-news-handler request)
+           (catch Exception e
+             {:status 500
+              :body (str "Erro interno no servidor: " (.getMessage e))}))
 
          (= uri "/getAllUser")
          (try
            (get-all-user-handler request)
            (catch Exception e
              {:status 500
-              :body (str "Erro interno no servidor: " (.getMessage e))})) 
+              :body (str "Erro interno no servidor: " (.getMessage e))}))
+
+        
+        (= [method uri] [:patch "/news/edit"])
+        (try
+          (let [params (parse-query-params (:query-string request))
+                user-id (:userId params)
+                body (json/parse-string (slurp (:body request)) true)
+                news-id (:newsId body)
+                update-data (dissoc body :newsId)] ;; Remove o ID dos dados a serem atualizados
+            (if (and user-id news-id)
+              (controllers/editar-noticia user-id news-id update-data)
+              {:status 400 :body "Parâmetros userId e newsId são obrigatórios."}))
+          (catch Exception e
+            {:status 500
+             :body (str "Erro interno no servidor: " (.getMessage e))}))
+
          
-         (= [method uri] [:delete "/news/delete"])
+         (= [method uri] [:patch "/news/edit"])
          (try
-           (let [params (parse-query-params (:query-string request))
-                 user-id (:userId params)
-                 news-id (:newsId params)]
-             (if (and user-id news-id)
-               (controllers/deletar-noticia user-id news-id)
-               {:status 400 :body "Parâmetros userId e newsId são obrigatórios."}))
+           (let [params (json/parse-string (slurp (:body request)) true)
+                 news-id (:newsId params)
+                 update-data (dissoc params :newsId)] ;; Remove o ID dos dados a serem atualizados
+             (if news-id
+               (controllers/editar-noticia news-id update-data)
+               {:status 400 :body "Parâmetro newsId é obrigatório."}))
            (catch Exception e
              {:status 500
               :body (str "Erro interno no servidor: " (.getMessage e))}))
