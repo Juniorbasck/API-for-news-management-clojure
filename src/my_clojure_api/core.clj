@@ -96,6 +96,18 @@
            (get-all-user-handler request)
            (catch Exception e
              {:status 500
+              :body (str "Erro interno no servidor: " (.getMessage e))})) 
+         
+         (= [method uri] [:delete "/news/delete"])
+         (try
+           (let [params (parse-query-params (:query-string request))
+                 user-id (:userId params)
+                 news-id (:newsId params)]
+             (if (and user-id news-id)
+               (controllers/deletar-noticia user-id news-id)
+               {:status 400 :body "Parâmetros userId e newsId são obrigatórios."}))
+           (catch Exception e
+             {:status 500
               :body (str "Erro interno no servidor: " (.getMessage e))}))
 
          :else
