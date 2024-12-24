@@ -178,18 +178,5 @@ http://localhost:3000/news/delete?userId=1&newsId=10
 ### Testar Localmente
 Use ferramentas como **Postman** ou **cURL** para testar os endpoints.
 
-## 🤝 Contribuição
-1. Faça um fork do repositório.
-2. Crie uma branch para suas alterações:
-   ```bash
-   git checkout -b minha-feature
-   ```
-3. Envie suas alterações:
-   ```bash
-   git commit -m "Minha nova feature"
-   git push origin minha-feature
-   ```
-4. Abra um Pull Request.
-
 ## 🖋️ Licença
 Este projeto está sob a licença MIT. Consulte o arquivo LICENSE para mais detalhes.
