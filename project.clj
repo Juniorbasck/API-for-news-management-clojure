@@ -7,6 +7,7 @@
                  [clj-http "3.12.3"]
                  [org.clojure/data.json "2.4.0"]
                  [cheshire "5.10.2"]
+                 [ring/ring-codec "1.2.0"]
                  [http-kit "2.7.0"]
                  [environ "1.2.0"]]
   :plugins [[lein-environ "1.2.0"]]

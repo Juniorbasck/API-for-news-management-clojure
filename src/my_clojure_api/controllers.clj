@@ -84,3 +84,24 @@
       ;; Tratamento de erro
       (println "Erro ao buscar ou salvar notícias:" (.getMessage e))
       {:status 500 :message "Erro ao salvar notícias" :error (.getMessage e)})))
+
+(defn curtir-noticia
+  "Incrementa o contador de curtidas de uma notícia no banco."
+  [news-id]
+  (try
+    (let [url (str "https://xfmwwaqypjiqalpgqamr.supabase.co/rest/v1/noticias?id=eq." news-id)
+          headers {"Authorization" (str "Bearer " (get-supabase-token))
+                   "apikey" (get-supabase-token)
+                   "Content-Type" "application/json"}
+          ;; Incrementa o contador de curtidas
+          body {:likes [:increment 1]}]
+      (println "URL da requisição:" url)
+      (println "Cabeçalhos enviados:" headers)
+      (let [response (client/patch url {:headers headers :form-params body :as :json})]
+        (println "Resposta do Supabase:" response)
+        (if (= 204 (:status response))
+          {:status 200 :message "Notícia curtida com sucesso!"}
+          {:status 400 :message "Erro ao curtir notícia"})))
+    (catch Exception e
+      (println "Erro ao curtir notícia:" (.getMessage e))
+      {:status 500 :message "Erro ao curtir notícia" :error (.getMessage e)})))
